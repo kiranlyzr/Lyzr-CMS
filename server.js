@@ -13,7 +13,7 @@ import { checkHtml, wrapHtmlBlock, unwrapHtmlBlock, replaceDataImages, extFor } 
 import * as wp from './lib/wp.js';
 
 const dir = fileURLToPath(new URL('.', import.meta.url));
-const read = (f) => readFileSync(dir + 'public/' + f, 'utf8');
+const read = (f) => readFileSync(dir + 'views/' + f, 'utf8');
 const LOGIN_HTML = read('login.html');
 const APP_HTML = read('app.html');
 const APP_JS = read('app.js');
@@ -151,5 +151,9 @@ app.post('/api/pages/:id/restore', guard, async (req, res) => {
 app.use((req, res) => res.status(404).type('text/plain').send('Not found'));
 app.use((err, req, res, next) => { console.error('cms-error', err.message); res.status(err.status || 500).json({ error: err.type === 'entity.too.large' ? 'The file is too large (limit 30 MB).' : 'Server error' }); });
 
-const port = Number(process.env.PORT || 8081);
-app.listen(port, '0.0.0.0', () => console.log('Product Pages CMS on :' + port + (DEV ? ' (TEST MODE: no login, no writes)' : '')));
+/* Vercel imports the app (api/index.js); Alpha / local run it as a normal server */
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT || 8081);
+  app.listen(port, '0.0.0.0', () => console.log('Product Pages CMS on :' + port + (DEV ? ' (TEST MODE: no login, no writes)' : '')));
+}
+export default app;

@@ -3,3 +3,4 @@ node_modules/
 *.log
 mock-writes.jsonl
 cms-logins-PRIVATE.txt
+.vercel
