@@ -83,10 +83,10 @@ app.get('/app.js', (req, res) => { if (!user(req)) return res.status(404).type('
 
 /* ---------- API ---------- */
 function getTarget(req, res) { const p = pageById(req.params.id); if (!p) { res.status(404).json({ error: 'Unknown page' }); return null; } return p; }
-const fail = (res, e) => { console.error('cms-error', e.message); res.status(e.status && e.status >= 400 && e.status < 600 ? (e.status === 401 || e.status === 403 ? 502 : e.status) : 502).json({ error: e.status === 401 || e.status === 403 ? 'WordPress refused the request. Ask the admin to check the CMS account.' : e.message }); };
+const fail = (res, e) => { console.error('cms-error', e.message); res.status(e.status && e.status >= 400 && e.status < 600 ? (e.status === 401 || e.status === 403 ? 502 : e.status) : 502).json({ error: e.status === 401 || e.status === 403 ? 'WordPress refused the request. Check that the bridge snippet has the current key (ask the admin).' : e.message }); };
 
 app.get('/api/pages', guard, async (req, res) => {
-  try { res.json({ pages: await Promise.all(PAGES.map((p) => wp.getSummary(p.id).catch((e) => ({ id: p.id, key: p.key, name: p.name, slug: p.slug, error: e.message })))) }); } catch (e) { fail(res, e); }
+  try { res.json({ pages: await wp.listSummaries() }); } catch (e) { fail(res, e); }
 });
 app.get('/api/pages/:id', guard, async (req, res) => {
   const p = getTarget(req, res); if (!p) return;

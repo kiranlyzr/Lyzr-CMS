@@ -14,7 +14,7 @@ Edit and publish three standalone-HTML pages on lyzr.ai: Open Finetuner (153241)
     npm test
 
 ## Deploy on Alpha
-Secrets (never commit, never paste in chat): `WP_URL`, `WP_USER`, `WP_PASS`, `SESSION_SECRET`, `CMS_USERS`.
+Secrets (never commit, never paste in chat): `WP_URL`, `WP_CMS_KEY`, `SESSION_SECRET`, `CMS_USERS`.
 Create the logins: `node scripts/make-users.mjs ~/cms-logins-PRIVATE.txt` (writes passwords + the CMS_USERS and SESSION_SECRET values to one private file; delete it afterwards).
 
 In an Alpha workspace terminal:
@@ -22,9 +22,12 @@ In an Alpha workspace terminal:
     git clone https://github.com/kiranlyzr/Lyzr-CMS.git && cd Lyzr-CMS
     npm ci
     forge deploy check --dir . --name lyzr-product-pages-cms
-    forge deploy --dir . --name lyzr-product-pages-cms --port 8081 --env WP_URL --env WP_USER --env WP_PASS --env SESSION_SECRET --env CMS_USERS
+    forge deploy --dir . --name lyzr-product-pages-cms --port 8081 --env WP_URL --env WP_CMS_KEY --env SESSION_SECRET --env CMS_USERS
 
 (Confirm the exact `--env` form with `forge deploy --help`.) A push to GitHub does not deploy: run `git pull --ff-only && npm ci && forge deploy --dir .` for each update. Changing a secret needs a redeploy.
 
-## WordPress side
-A dedicated user (for example `lyzr-cms-bot`) with the Editor role and an application password (Users > Profile > Application Passwords). Editors on a single site have `unfiltered_html`, which the pages need so WordPress keeps `<script>` and `<style>`. Do not use a personal admin account.
+## WordPress side: the bridge snippet
+Normal WordPress logins (application passwords) are ignored on this site, so the CMS uses `wordpress/lyzr-cms-bridge.php` instead (WPCode > Add Snippet > PHP Snippet > Run Everywhere > Active). It checks a secret key sent in the `X-CMS-Key` header (the snippet stores only the key's SHA-256 hash) and can only: read/replace the content of the 3 pages in `LYZR_CMS_PAGES`, set them to draft/publish, list/read their revisions, and upload images. It cannot touch anything else, or delete.
+- The repo copy has a placeholder hash. Generate a key, put its SHA-256 in the snippet (`LYZR_CMS_KEY_SHA256`) and the key itself in the `WP_CMS_KEY` secret. Changing the key = new hash in the snippet + new secret + redeploy.
+- Check it: `curl -H "X-CMS-Key: <key>" https://www.lyzr.ai/wp-json/lyzr-cms/v1/ping` returns `key_valid: true` (and `authorization_header_received` tells you whether the normal login header reaches WordPress at all).
+- To add a page: add its id to `LYZR_CMS_PAGES` in the snippet and to `lib/pages.config.js`.
