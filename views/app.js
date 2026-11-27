@@ -155,7 +155,7 @@
     var box = $('revs'); box.textContent = 'Loading…';
     api('/api/pages/' + state.page.id + '/revisions').then(function (d) {
       box.textContent = '';
-      if (!d.revisions.length) { box.textContent = 'No earlier versions yet.'; return; }
+      if (!d.revisions.length) { box.textContent = 'No earlier versions yet. A copy of the current page is saved each time you publish.'; return; }
       var t = el('div');
       d.revisions.forEach(function (r) {
         var b = el('button', { cls: 'btn btn-ghost btn-sm', type: 'button', text: 'Restore' });

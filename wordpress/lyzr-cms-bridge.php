@@ -11,7 +11,7 @@
  * What it can do (and nothing else):
  *   - read / replace the CONTENT of the pages listed in LYZR_CMS_PAGES
  *   - set those pages to draft or publish
- *   - list / read their revisions (for restore)
+ *   - keep its own backups of each page before every change, and list / read them (for restore): this site keeps no WordPress revisions
  *   - upload an image to the media library
  * It cannot touch any other page or post, users, settings, plugins, titles, slugs, templates, or delete anything.
  *
@@ -73,6 +73,57 @@ function lyzr_cms_update($args) {
     return $res;
 }
 
+/* ---- own backups: this site keeps no WordPress page revisions, so the bridge saves the previous content before every change ---- */
+if (!defined('LYZR_CMS_KEEP')) { define('LYZR_CMS_KEEP', 20); }   /* backups kept per page */
+
+function lyzr_cms_backup_dir() {
+    $u = wp_upload_dir();
+    if (!empty($u['error'])) { return false; }
+    $dir = trailingslashit($u['basedir']) . 'lyzr-cms-backups-' . substr(hash('sha256', 'dir' . LYZR_CMS_KEY_SHA256), 0, 12);   /* unguessable folder name */
+    if (!is_dir($dir)) {
+        if (!wp_mkdir_p($dir)) { return false; }
+        @file_put_contents($dir . '/index.php', "<?php // Silence is golden.\n");
+        @file_put_contents($dir . '/.htaccess', "Deny from all\n");
+    }
+    return $dir;
+}
+
+/** saves $p->post_content as a compressed file; returns the backup id (a UTC timestamp) or false. A failed backup stops the save. */
+function lyzr_cms_backup($p) {
+    $dir = lyzr_cms_backup_dir(); if (!$dir) { return false; }
+    $ts = time();
+    while (file_exists($dir . '/' . (int) $p->ID . '-' . gmdate('YmdHis', $ts) . '.html.gz')) { $ts++; }
+    $id = gmdate('YmdHis', $ts);
+    $file = $dir . '/' . (int) $p->ID . '-' . $id . '.html.gz';
+    $gz = gzencode((string) $p->post_content, 6);
+    if ($gz === false || file_put_contents($file, $gz) === false || !is_file($file) || filesize($file) < 10) { return false; }
+    $all = glob($dir . '/' . (int) $p->ID . '-*.html.gz');
+    if ($all && count($all) > LYZR_CMS_KEEP) { rsort($all); foreach (array_slice($all, LYZR_CMS_KEEP) as $old) { @unlink($old); } }
+    return $id;
+}
+
+function lyzr_cms_backup_list($page_id) {
+    $dir = lyzr_cms_backup_dir(); if (!$dir) { return array(); }
+    $all = glob($dir . '/' . (int) $page_id . '-*.html.gz'); if (!$all) { return array(); }
+    rsort($all);
+    $out = array();
+    foreach (array_slice($all, 0, 15) as $f) {
+        if (!preg_match('/-(\d{14})\.html\.gz$/', $f, $m)) { continue; }
+        $d = DateTime::createFromFormat('YmdHis', $m[1], new DateTimeZone('UTC'));
+        $out[] = array('id' => (int) $m[1], 'date' => $d ? $d->format('Y-m-d\TH:i:s') : '');
+    }
+    return $out;
+}
+
+function lyzr_cms_backup_read($page_id, $rev) {
+    $dir = lyzr_cms_backup_dir();
+    if (!$dir || !preg_match('/^\d{14}$/', (string) $rev)) { return false; }
+    $file = $dir . '/' . (int) $page_id . '-' . $rev . '.html.gz';
+    if (!is_file($file)) { return false; }
+    $raw = file_get_contents($file);
+    return $raw === false ? false : gzdecode($raw);
+}
+
 function lyzr_cms_nocache() {
     if (!defined('DONOTCACHEPAGE')) { define('DONOTCACHEPAGE', true); }
     nocache_headers();
@@ -115,6 +166,7 @@ add_action('rest_api_init', function () {
         $params = $req->get_json_params();
         $content = is_array($params) && isset($params['content']) && is_string($params['content']) ? $params['content'] : null;
         if ($content === null || strlen($content) < 50) { return new WP_Error('lyzr_cms_content', 'Content missing or too short', array('status' => 400)); }
+        if ($content !== $p->post_content && lyzr_cms_backup($p) === false) { return new WP_Error('lyzr_cms_backup', 'Could not save a backup of the current page, so nothing was changed.', array('status' => 500)); }
         $r = lyzr_cms_update(array('ID' => $p->ID, 'post_content' => $content));   /* only the content: title, slug, status, template stay as they are */
         if (is_wp_error($r)) { return new WP_Error('lyzr_cms_save', $r->get_error_message(), array('status' => 500)); }
         clean_post_cache($p->ID);
@@ -136,19 +188,16 @@ add_action('rest_api_init', function () {
     register_rest_route($ns, '/pages/(?P<id>\d+)/revisions', array('methods' => 'GET', 'permission_callback' => $auth, 'callback' => function (WP_REST_Request $req) {
         lyzr_cms_nocache();
         $p = lyzr_cms_page($req); if (is_wp_error($p)) { return $p; }
-        $out = array();
-        foreach (array_slice(array_values(wp_get_post_revisions($p->ID, array('order' => 'DESC', 'orderby' => 'date'))), 0, 15) as $r) {
-            $out[] = array('id' => (int) $r->ID, 'date' => mysql2date('Y-m-d\TH:i:s', $r->post_modified, false));
-        }
-        return array('revisions' => $out);
+        return array('revisions' => lyzr_cms_backup_list($p->ID));
     }));
 
     register_rest_route($ns, '/pages/(?P<id>\d+)/revisions/(?P<rev>\d+)', array('methods' => 'GET', 'permission_callback' => $auth, 'callback' => function (WP_REST_Request $req) {
         lyzr_cms_nocache();
         $p = lyzr_cms_page($req); if (is_wp_error($p)) { return $p; }
-        $rev = get_post((int) $req['rev']);
-        if (!$rev || $rev->post_type !== 'revision' || (int) $rev->post_parent !== (int) $p->ID) { return new WP_Error('lyzr_cms_rev', 'Revision not found', array('status' => 404)); }
-        return array('id' => (int) $rev->ID, 'date' => mysql2date('Y-m-d\TH:i:s', $rev->post_modified, false), 'content' => $rev->post_content);
+        $c = lyzr_cms_backup_read($p->ID, (string) $req['rev']);
+        if ($c === false) { return new WP_Error('lyzr_cms_rev', 'Backup not found', array('status' => 404)); }
+        $d = DateTime::createFromFormat('YmdHis', (string) $req['rev'], new DateTimeZone('UTC'));
+        return array('id' => (int) $req['rev'], 'date' => $d ? $d->format('Y-m-d\TH:i:s') : '', 'content' => $c);
     }));
 
     /* image upload: the raw file is the request body; Content-Type = image type, X-Filename = file name */
