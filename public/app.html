@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="robots" content="noindex, nofollow">
+<title>Product Pages CMS — Lyzr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Lyzr website design system, applied to the CMS: off-white page, hairline borders, one orange action, mono labels. */
+:root{
+  --bg:#FAFAF9; --surface:#fff; --fill:#F1F0EE; --line:#E3E1DE; --line-soft:#EFEFED;
+  --text:#1F2022; --soft:#6B675F; --muted:#8A857C;
+  --accent:#FE4B1E; --accent-h:#E5401A; --accent-tint:rgba(254,75,30,.12);
+  --green:#2F8F5B; --error:#C43A13;
+  --sans:"Aeonik Pro","Aeonik","Figtree","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+[hidden]{display:none!important}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+
+
+/* ── shell ── */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1320px;margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;gap:28px}
+.lz-logo{height:24px;width:auto;display:block}
+.brand{display:flex;align-items:center;gap:14px;text-decoration:none}
+.brand span{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);padding-left:14px;border-left:1px solid var(--line)}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tab{height:36px;padding:0 14px;display:inline-flex;align-items:center;border-radius:4px;font-size:14px;color:var(--soft);text-decoration:none;transition:background .2s,color .2s}
+.tab:hover{background:var(--fill);color:var(--text)}
+.tab.active{background:var(--text);color:#fff}
+.topbar .spacer{flex:1}
+.who{font-size:13px;color:var(--muted)}
+.link-btn{background:none;border:0;cursor:pointer;font-size:14px;color:var(--soft);padding:6px 0}
+.link-btn:hover{color:var(--text)}
+.wrap{max-width:1320px;margin:0 auto;padding:44px 32px 90px}
+.page-head{margin-bottom:36px}
+.page-head h1{font-weight:400;font-size:clamp(30px,3.4vw,44px);line-height:1.08;letter-spacing:-.022em;margin-top:12px}
+.page-head p{margin-top:10px;color:var(--soft);font-size:16px;max-width:60ch}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:24px;position:sticky;top:92px}
+@media(max-width:1020px){.layout{grid-template-columns:minmax(0,1fr)}.stack{position:static}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:32px}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:26px}
+.card-title{font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.01em}
+.card-sub{margin-top:6px;font-size:14px;color:var(--soft)}
+.editing-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-8px 0 24px;padding:12px 14px;border-radius:4px;background:var(--accent-tint);font-size:14px}
+.editing-bar button{background:none;border:0;cursor:pointer;color:var(--accent);font-size:14px;text-decoration:underline}
+
+/* ── fields ── */
+.field{margin-bottom:20px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row .field{margin-bottom:20px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+label{display:block;margin-bottom:7px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.hint{font-family:var(--sans);text-transform:none;letter-spacing:0;color:var(--muted);font-size:12.5px;margin-left:4px}
+input[type=text],input[type=url],input[type=password],input[type=datetime-local],select,textarea{
+  width:100%;height:44px;padding:0 14px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:15px;transition:border-color .2s,box-shadow .2s}
+input::placeholder{color:#B8B4AD}
+input:hover,select:hover{border-color:#CFCCC7}
+input:focus,select:focus{outline:none;border-color:var(--text)}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{-webkit-appearance:none;appearance:none;padding-right:44px;cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%231F2022'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z'/%3E%3C/svg%3E") no-repeat right 14px center/20px 20px}
+.input-row{display:flex;gap:8px}
+.input-row input{flex:1;min-width:0}
+.status-line{margin-top:6px;font-size:12.5px;color:var(--muted);min-height:16px}
+.status-line.ok{color:var(--green)}.status-line.bad{color:var(--error)}
+.divider{height:1px;background:var(--line);margin:8px 0 26px}
+
+/* ── buttons ── */
+.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border:0;border-radius:4px;background:var(--text);color:#fff;font-size:15px;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn:hover{background:#000}
+.btn:disabled{opacity:.55;cursor:default}
+.btn-accent{background:var(--accent)}.btn-accent:hover{background:var(--accent-h)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line)}.btn-ghost:hover{background:var(--fill);border-color:#CFCCC7}
+.btn-sm{height:34px;padding:0 14px;font-size:13.5px}
+.btn-block{width:100%}
+.btn-danger{background:transparent;color:var(--error);border:1px solid var(--line)}.btn-danger:hover{background:#FDF1EC;border-color:#F3C9BA}
+.form-actions{display:flex;gap:10px;margin-top:8px}
+.form-actions .btn-accent{flex:1}
+.spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.loading .spinner{display:block}.loading .btn-text{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;top:20px;right:20px;z-index:100000;max-width:360px;padding:13px 18px;border-radius:4px;font-size:14px;color:#fff;background:var(--text);opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.toast.error{background:var(--error)}
+@media(max-width:640px){.topbar-in,.wrap{padding-left:16px;padding-right:16px}.card{padding:22px 18px}.brand span{display:none}}
+
+/* ── product pages CMS ── */
+.page-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:18px 0;border-top:1px solid var(--line)}
+.page-row:first-child{border-top:0;padding-top:0}
+.page-row:last-child{padding-bottom:0}
+.pr-name{font-size:18px;letter-spacing:-.005em;line-height:1.25}
+.pr-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:5px;font-size:13px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:11px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--fill);color:var(--soft)}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.draft{background:#FFF6E0;color:#9A6200}
+.pill.live{background:rgba(47,143,91,.12);color:var(--green)}
+.step{padding-bottom:26px;margin-bottom:26px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.step .num{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.step h3{font-weight:400;font-size:20px;letter-spacing:-.01em;margin-bottom:4px}
+.step p.lead{font-size:14px;color:var(--soft);margin-bottom:14px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.drop{border:1.5px dashed var(--line);border-radius:6px;padding:26px 18px;text-align:center;color:var(--soft);cursor:pointer;font-size:14px;transition:border-color .2s,background .2s}
+.drop strong{color:var(--text);font-weight:400}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-tint)}
+textarea.code{height:110px;padding:10px 12px;font-family:var(--mono);font-size:12px;resize:vertical;margin-top:12px;line-height:1.5}
+.msgs{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.msgs li{font-size:13.5px;padding:9px 12px;border-radius:4px;border-left:3px solid var(--line);background:var(--fill)}
+.msgs li.err{border-color:var(--error);background:#FBEDE8;color:#7A260B}
+.msgs li.warn{border-color:#E0A526;background:#FFF6E0;color:#5C3D00}
+.msgs li.ok{border-color:var(--green);background:rgba(47,143,91,.1);color:#14522A}
+.seg{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.seg button{height:32px;padding:0 13px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:13.5px;color:var(--soft);cursor:pointer;transition:background .2s,color .2s}
+.seg button:hover{background:var(--fill);color:var(--text)}
+.seg button.on{background:var(--text);color:#fff;border-color:var(--text)}
+.stage{background:var(--fill);border-radius:4px;padding:12px;overflow:auto}
+.frame{display:block;margin:0 auto;border:1px solid var(--line);background:#fff;border-radius:4px;height:68vh;max-width:100%}
+.empty{color:var(--muted);text-align:center;padding:80px 20px;font-size:14px}
+.rev-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.rev-row:first-child{border-top:0}
+.modal{position:fixed;inset:0;background:rgba(31,32,34,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200000}
+.modal .box{background:var(--surface);border-radius:6px;padding:30px;max-width:460px;width:100%}
+.modal h3{font-weight:400;font-size:22px;letter-spacing:-.01em;margin-bottom:8px}
+.modal p{color:var(--soft);font-size:14.5px;margin-bottom:22px}
+.badge{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-tint);color:var(--accent);padding:3px 9px;border-radius:11px}
+.back{background:none;border:0;cursor:pointer;font-size:14px;color:var(--soft);padding:0;margin-bottom:18px}
+.back:hover{color:var(--text)}
+.layout.edit{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+@media(max-width:1020px){.layout.edit{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+  <a class="brand" href="/"><svg class="lz-logo" viewBox="2.449 0 198.551 34" role="img" aria-label="Lyzr">
+  <path fill="var(--mk,#FE4B1E)" d="M55 21L47.6267 34H2.89478L55 21Z"/>
+  <path fill="var(--mk,#FE4B1E)" d="M43.9352 9.21432L40.3648 20.8969L2.44928 31.9337L43.9352 9.21432Z"/>
+  <path fill="var(--mk,#FE4B1E)" d="M34.1098 10.6493L34.0641 5.80164e-05C33.0913 5.51002 29.7951 9.74939 20.8644 18.5746L34.1098 10.6493Z"/>
+  <path fill="var(--wm,#1F2022)" d="M67 34.0002V30.9005L71.5415 30.1256V3.97175L67 3.19682V0.097109H81.8808V3.19682L77.146 3.97175V30.1256C79.0303 30.4646 81.301 30.7068 83.7651 30.7068C89.0313 30.7068 94.0077 29.3507 97.0515 25.476H100.627L95.2155 34.0002H67Z"/>
+  <path fill="var(--wm,#1F2022)" d="M104.675 34.0002V30.9005L109.313 30.1256V24.1199L98.2975 3.97175L94.6256 3.19682V0.097109H108.83V3.19682L104.385 3.97175L112.792 19.7609H112.985L121.585 3.97175L117.14 3.19682V0.097109H129.605V3.24526L125.643 3.97175L114.918 23.5387V30.1256L119.556 30.9005V34.0002H104.675Z"/>
+  <path fill="var(--wm,#1F2022)" d="M129.995 34.0002V31.0943L153.959 3.77802C151.688 3.43899 149.321 3.29369 146.615 3.29369C140.769 3.29369 136.807 4.74668 134.537 8.81506H130.768L135.889 0.097109H162.655V2.61563L138.305 30.3193C140.817 30.6584 143.523 30.8037 146.615 30.8037C153.041 30.8037 157.341 29.3507 160.046 25.2823H163.815L158.694 34.0002H129.995Z"/>
+  <path fill="var(--wm,#1F2022)" d="M166.214 34.0002V30.9005L170.949 30.1256V3.97175L166.214 3.19682V0.097109H176.36C178.437 0.097109 181.674 0.000244141 183.22 0.000244141C192.158 0.000244141 197.521 3.39056 197.521 9.15409C197.521 15.1114 191.869 17.7267 186.312 18.1142C188.003 19.5188 189.791 21.0686 192.497 24.3136L197.521 30.3193L201 30.7068V34.0002H192.883C191.144 31.8692 183.993 22.4732 180.321 18.4048H176.553V30.1256L181.384 30.9005V34.0002H166.214ZM176.553 15.2082H181.868C187.182 15.2082 190.854 13.8521 190.854 9.39626C190.854 5.08571 187.472 3.29369 182.496 3.29369C180.515 3.29369 178.437 3.58429 176.553 3.97175V15.2082Z"/>
+</svg><span>Product Pages CMS</span></a>
+  <nav class="tabs" aria-label="Sections"><a class="tab active" href="/">Pages</a></nav>
+  <span class="spacer"></span>
+  <span id="test" class="badge" hidden>Test mode</span>
+  <span class="who" id="who"></span>
+  <button class="link-btn" id="out" type="button">Sign out</button>
+</div></header>
+<main class="wrap">
+  <section id="list">
+    <div class="page-head">
+      <p class="label">Content</p>
+      <h1>Manage product pages</h1>
+      <p>Pick a page, upload the new HTML, check it in the previews, then publish. Publishing updates lyzr.ai at once, and the previous version is kept so you can restore it.</p>
+    </div>
+    <div class="card" style="max-width:860px"><div id="rows"><div class="state">Loading…</div></div></div>
+  </section>
+  <section id="edit" hidden>
+    <button class="back" id="back" type="button">← All pages</button>
+    <div class="page-head">
+      <p class="label" id="eLabel">Edit page</p>
+      <h1 id="eName"></h1>
+      <p id="eMeta"></p>
+    </div>
+    <div class="layout edit">
+      <div class="card">
+        <div class="step"><p class="num">Step 1</p><h3>Get the current HTML</h3><p class="lead">Start from the live version so you never overwrite someone else's changes.</p>
+          <div class="btn-row"><a class="btn btn-ghost btn-sm" id="dl" href="#">Download current HTML</a><a class="btn btn-ghost btn-sm" id="live" target="_blank" rel="noopener">View live page ↗</a></div></div>
+        <div class="step"><p class="num">Step 2</p><h3>Upload the new HTML</h3><p class="lead">One .html file with only the page snippet (no &lt;html&gt;, &lt;head&gt; or &lt;body&gt;). Embedded images are moved to the media library automatically.</p>
+          <div class="drop" id="drop"><strong>Drop the .html file here</strong><br>or click to choose<input type="file" id="file" accept=".html,.htm,text/html" hidden></div>
+          <textarea class="code" id="paste" placeholder="…or paste the HTML here" spellcheck="false"></textarea>
+          <div class="btn-row" style="margin-top:10px"><button class="btn btn-ghost btn-sm" id="usePaste" type="button">Use pasted HTML</button><span class="status-line" id="fileInfo"></span></div>
+          <ul class="msgs" id="msgs"></ul></div>
+        <div class="step"><p class="num">Step 3</p><h3 id="pubTitle">Publish</h3><p class="lead" id="pubLead">Replaces the live page. Look at Desktop, Tablet and Mobile first.</p>
+          <button class="btn btn-accent btn-block" id="pub" type="button" disabled>Publish to live page</button></div>
+        <div class="step"><h3>Page status</h3><p class="lead" id="statusLead"></p>
+          <div class="btn-row"><button class="btn btn-ghost btn-sm" id="statusBtn" type="button"></button></div></div>
+        <div class="step"><h3>Earlier versions</h3><p class="lead">WordPress keeps each version. Restoring replaces the live page with that version.</p>
+          <div id="revs" class="status-line">Loading…</div></div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <p class="label" style="margin-bottom:14px">Live preview</p>
+          <div class="seg" id="tabs"><button class="on" data-w="1440" type="button">Desktop</button><button data-w="820" type="button">Tablet</button><button data-w="390" type="button">Mobile</button><button data-w="cur" id="tabCur" type="button">Current live HTML</button></div>
+          <div class="stage" id="stage"><div class="empty">Upload a file to see the preview.</div></div>
+          <p class="status-line" style="margin-top:12px">The preview shows your page only, without the site header, footer or site fonts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script src="/app.js"></script>
+</body>
+</html>
