@@ -12,6 +12,8 @@ Live: https://lyzr-product-pages-cms.vercel.app (sign-in required). Code: https:
 | [deployment.md](deployment.md) | Vercel (live now), Alpha (alternative), secrets, redeploying |
 | [status-and-open-items.md](status-and-open-items.md) | What was tested, known issues, cleanup checklist |
 
+> `docs/logins-PRIVATE.txt` (local only) holds the two sign-in passwords. It is git-ignored and excluded from Vercel deploys, so it never leaves this computer. Do not move it out of `.gitignore`.
+
 ## How it fits together
 ```
 Browser --(email + password, session cookie)--> CMS on Vercel (Express, one function)

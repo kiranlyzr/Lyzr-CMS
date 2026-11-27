@@ -4,3 +4,7 @@ node_modules/
 mock-writes.jsonl
 cms-logins-PRIVATE.txt
 .vercel
+
+# local-only login details (never commit)
+docs/logins-PRIVATE.txt
+*PRIVATE*

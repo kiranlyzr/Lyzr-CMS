@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var state = { page: null, current: '', next: '', width: '1440' };
+  var state = { page: null, current: '', next: '', src: 'live', dev: '1440', fileName: '' };
 
   function el(tag, props, kids) {
     var n = document.createElement(tag);
@@ -42,16 +42,15 @@
 
   /* ---------- editor ---------- */
   function openPage(id) {
-    state.next = ''; $('msgs').textContent = ''; $('fileInfo').textContent = ''; $('paste').value = ''; $('pub').disabled = true;
+    state.next = ''; state.fileName = ''; $('msgs').textContent = ''; $('fileInfo').textContent = ''; $('paste').value = ''; $('pub').disabled = true;
     api('/api/pages/' + id).then(function (d) {
       state.page = d; state.current = d.html; state.next = '';
       $('list').hidden = true; $('edit').hidden = false;
       $('eName').textContent = d.name;
       $('eMeta').textContent = (d.status === 'publish' ? 'Live' : d.status) + ' · last updated ' + fmt(d.modified) + ' · ' + Math.round(d.html.length / 1024) + ' KB';
       $('dl').href = '/api/pages/' + id + '/download'; $('live').href = d.link;
-      $('tabCur').hidden = false;
-      stagePlaceholder(); loadRevs(); statusUi();
-      setTab('cur');
+      loadRevs(); statusUi();
+      state.src = 'live'; state.fileName = ''; renderAll();
     }).catch(function (e) { toast(e.message, true); });
   }
   function statusUi() {
@@ -77,27 +76,52 @@
       }).catch(function (e) { toast(e.message, true); }).then(function () { $('statusBtn').disabled = false; });
     });
   });
-  function stagePlaceholder() { /* shown until a file is loaded */ $('stage').textContent = ''; $('stage').appendChild(el('div', { cls: 'empty', text: 'Upload a file to see the preview, or open "Current live HTML" to see what is live now.' })); }
-  function frame(html, w) {
-    var doc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0}body{font-family:system-ui,sans-serif}</style></head><body>' + html + '</body></html>';
-    var f = el('iframe', { cls: 'frame', sandbox: 'allow-scripts', title: 'Preview' });
-    f.style.width = (w === 'cur' ? 1440 : w) + 'px';
-    f.setAttribute('srcdoc', doc);
-    return f;
+  /* ---------- preview: source (your upload / live now) x device (desktop / tablet / mobile), at true width scaled to fit ---------- */
+  function previewHtml() { return state.src === 'new' ? state.next : state.current; }
+  function paint(stage, height) {
+    stage.textContent = '';
+    var html = previewHtml();
+    if (!html) { stage.appendChild(el('div', { cls: 'empty', text: state.src === 'new' ? 'Upload a file to see it here.' : 'Nothing to show.' })); return; }
+    var w = Number(state.dev), avail = Math.max(200, stage.clientWidth - (stage === $('stage') ? 24 : 32));
+    var scale = Math.min(1, avail / w);
+    var box = el('div', { cls: 'pvbox' });
+    box.style.width = Math.round(w * scale) + 'px'; box.style.height = height + 'px';
+    var f = el('iframe', { sandbox: 'allow-scripts', title: 'Preview' });   /* sandboxed: the page cannot reach the CMS or its session */
+    f.style.width = w + 'px'; f.style.height = Math.round(height / scale) + 'px'; f.style.transform = 'scale(' + scale + ')';
+    f.setAttribute('srcdoc', '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0}body{font-family:system-ui,sans-serif}</style></head><body>' + html + '</body></html>');
+    box.appendChild(f); stage.appendChild(box);
   }
-  function show(which) {
-    var w = which === 'cur' ? '1440' : which;
-    var html = which === 'cur' ? state.current : state.next;
-    var stage = $('stage'); stage.textContent = '';
-    if (!html) { stagePlaceholder(); return; }
-    stage.appendChild(frame(html, w));
+  function note() {
+    if (state.src === 'new') return 'Previewing your uploaded file' + (state.fileName ? ': ' + state.fileName : '') + ' (' + Math.round(state.next.length / 1024) + ' KB). Not published yet.';
+    return 'Previewing the page that is live now.';
   }
-  function setTab(which, quiet) {
-    state.width = which;
-    Array.prototype.forEach.call($('tabs').children, function (t) { t.classList.toggle('on', t.getAttribute('data-w') === which); });
-    if (!quiet || state.next) show(which);
+  function renderAll() {
+    document.querySelectorAll('[data-s]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-s') === state.src); b.disabled = b.getAttribute('data-s') === 'new' && !state.next; });
+    document.querySelectorAll('[data-d]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-d') === state.dev); });
+    $('pvNote').textContent = note();
+    paint($('stage'), Math.round(Math.max(380, window.innerHeight * 0.68)));
+    var fs = $('fsStage'); if (fs) { paint(fs, Math.max(300, fs.clientHeight - 34)); var n = $('fsNote'); if (n) n.textContent = note(); }
   }
-  $('tabs').addEventListener('click', function (e) { var w = e.target.getAttribute && e.target.getAttribute('data-w'); if (w) setTab(w); });
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t.getAttribute) return;
+    var s = t.getAttribute('data-s'), d = t.getAttribute('data-d');
+    if (s && !t.disabled) { state.src = s; renderAll(); }
+    if (d) { state.dev = d; renderAll(); }
+  });
+  window.addEventListener('resize', function () { if (!$('edit').hidden) renderAll(); });
+  $('full').addEventListener('click', function () {
+    var bar = el('div', { cls: 'fs-bar' }, [
+      el('div', { cls: 'seg' }, [el('button', { 'data-s': 'new', type: 'button', text: 'Your uploaded file' }), el('button', { 'data-s': 'live', type: 'button', text: 'Live now' })]),
+      el('div', { cls: 'seg' }, [el('button', { 'data-d': '1440', type: 'button', text: 'Desktop' }), el('button', { 'data-d': '820', type: 'button', text: 'Tablet' }), el('button', { 'data-d': '390', type: 'button', text: 'Mobile' })]),
+      el('span', { cls: 'status-line', id: 'fsNote' }), el('span', { cls: 'spacer' }), el('button', { cls: 'btn btn-sm', id: 'fsClose', type: 'button', text: 'Close' })]);
+    var fs = el('div', { cls: 'fs', id: 'fs' }, [bar, el('div', { cls: 'fs-stage', id: 'fsStage' })]);
+    document.body.appendChild(fs);
+    function close() { fs.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(ev) { if (ev.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    $('fsClose').addEventListener('click', close);
+    renderAll();
+  });
 
   function renderMsgs(res) {
     var ul = $('msgs'); ul.textContent = '';
@@ -107,10 +131,10 @@
     $('pub').disabled = res.errors.length > 0;
   }
   function loadHtml(text, name) {
-    state.next = text; $('fileInfo').textContent = (name || 'pasted HTML') + ' · ' + Math.round(text.length / 1024) + ' KB';
+    state.next = text; state.fileName = name || ''; $('fileInfo').textContent = (name || 'pasted HTML') + ' · ' + Math.round(text.length / 1024) + ' KB';
     api('/api/pages/' + state.page.id + '/check', 'POST', { html: text }).then(function (res) {
       renderMsgs(res);
-      setTab(state.width === 'cur' ? '1440' : state.width);
+      state.src = 'new'; renderAll();   /* show the upload right away, at the device already chosen */
     }).catch(function (e) { toast(e.message, true); });
   }
   var drop = $('drop'), file = $('file');

@@ -9,7 +9,7 @@ Sign in at https://lyzr-product-pages-cms.vercel.app with the email and password
 4. **Step 2: Upload the new HTML.** Drop the .html file, or paste it. The CMS checks it straight away:
    - **Fix:** blocks publishing until fixed (for example a full `<html>` document, `&&` in a script, CSS that targets the whole site, the wrong page's wrapper id).
    - **Check:** allowed, but look at it (no phone breakpoints, images without alt text, fixed widths).
-5. **Preview** on **Desktop**, **Tablet** and **Mobile**. The preview shows only your page: no site header, footer or site fonts.
+5. **Preview before publishing.** As soon as the file is loaded, the preview switches to **Your uploaded file**. Choose **Desktop**, **Tablet** or **Mobile**: each is shown at its true width (1440, 820 and 390 px), scaled to fit. Switch to **Live now** to compare with the page that is live today, and use **Full screen** (Esc closes it) for a larger view. The preview shows only your page: no site header, footer or site fonts, and nothing is published until you click Publish.
 6. **Step 3: Publish.** Confirm. The live page is replaced at once. Images embedded in the file are moved to the media library and replaced with links.
 7. Open the live page (*View live page*) and check it, since the host's cache can take a moment.
 

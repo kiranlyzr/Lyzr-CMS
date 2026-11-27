@@ -122,12 +122,20 @@ textarea.code{height:110px;padding:10px 12px;font-family:var(--mono);font-size:1
 .msgs li.err{border-color:var(--error);background:#FBEDE8;color:#7A260B}
 .msgs li.warn{border-color:#E0A526;background:#FFF6E0;color:#5C3D00}
 .msgs li.ok{border-color:var(--green);background:rgba(47,143,91,.1);color:#14522A}
-.seg{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar{display:flex;gap:10px 22px;flex-wrap:wrap;margin-bottom:12px}
+.pv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button[disabled]{opacity:.45;cursor:default;pointer-events:none}
 .seg button{height:32px;padding:0 13px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:13.5px;color:var(--soft);cursor:pointer;transition:background .2s,color .2s}
 .seg button:hover{background:var(--fill);color:var(--text)}
 .seg button.on{background:var(--text);color:#fff;border-color:var(--text)}
 .stage{background:var(--fill);border-radius:4px;padding:12px;overflow:auto}
-.frame{display:block;margin:0 auto;border:1px solid var(--line);background:#fff;border-radius:4px;height:68vh;max-width:100%}
+.pvbox{margin:0 auto;overflow:hidden;border:1px solid var(--line);background:#fff;border-radius:4px}
+.pvbox iframe{display:block;border:0;background:#fff;transform-origin:0 0}
+.fs{position:fixed;inset:0;background:var(--bg);z-index:150000;display:flex;flex-direction:column}
+.fs-bar{display:flex;align-items:center;gap:12px 22px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.fs-bar .spacer{flex:1}
+.fs-stage{flex:1;min-height:0;padding:16px;background:var(--fill);overflow:auto}
 .empty{color:var(--muted);text-align:center;padding:80px 20px;font-size:14px}
 .rev-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
 .rev-row:first-child{border-top:0}
@@ -138,7 +146,7 @@ textarea.code{height:110px;padding:10px 12px;font-family:var(--mono);font-size:1
 .badge{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-tint);color:var(--accent);padding:3px 9px;border-radius:11px}
 .back{background:none;border:0;cursor:pointer;font-size:14px;color:var(--soft);padding:0;margin-bottom:18px}
 .back:hover{color:var(--text)}
-.layout.edit{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+.layout.edit{grid-template-columns:minmax(340px,.85fr) minmax(0,1.5fr)}
 @media(max-width:1020px){.layout.edit{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
@@ -193,10 +201,14 @@ textarea.code{height:110px;padding:10px 12px;font-family:var(--mono);font-size:1
       </div>
       <div class="stack">
         <div class="card">
-          <p class="label" style="margin-bottom:14px">Live preview</p>
-          <div class="seg" id="tabs"><button class="on" data-w="1440" type="button">Desktop</button><button data-w="820" type="button">Tablet</button><button data-w="390" type="button">Mobile</button><button data-w="cur" id="tabCur" type="button">Current live HTML</button></div>
-          <div class="stage" id="stage"><div class="empty">Upload a file to see the preview.</div></div>
-          <p class="status-line" style="margin-top:12px">The preview shows your page only, without the site header, footer or site fonts.</p>
+          <div class="pv-head"><p class="label">Live preview</p><button class="btn btn-ghost btn-sm" id="full" type="button">Full screen ⤢</button></div>
+          <div class="toolbar">
+            <div class="seg" id="srcSeg"><button data-s="new" type="button" disabled>Your uploaded file</button><button data-s="live" type="button" class="on">Live now</button></div>
+            <div class="seg" id="devSeg"><button data-d="1440" type="button" class="on">Desktop</button><button data-d="820" type="button">Tablet</button><button data-d="390" type="button">Mobile</button></div>
+          </div>
+          <p class="status-line" id="pvNote" style="margin:0 0 12px"></p>
+          <div class="stage" id="stage"></div>
+          <p class="status-line" style="margin-top:12px">Shown at true device width (scaled to fit). Use Full screen for a larger view. The preview shows your page only, without the site header, footer or site fonts.</p>
         </div>
       </div>
     </div>
